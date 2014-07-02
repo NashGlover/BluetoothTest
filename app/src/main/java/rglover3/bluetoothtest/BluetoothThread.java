@@ -1,46 +1,1 @@
-package rglover3.bluetoothtest;
-
-import android.bluetooth.BluetoothAdapter;
-
-import android.app.Activity;
-import android.bluetooth.BluetoothDevice;
-import android.content.Intent;
-
-import java.util.ArrayList;
-import java.util.Set;
-
-/**
- * Created by rglover3 on 7/1/2014.
- */
-public class BluetoothThread implements Runnable {
-
-    BluetoothAdapter adapter;
-
-    ArrayList<BluetoothAdapter> adapterArray;
-
-    public BluetoothThread () {
-    }
-
-    public void run() {
-        System.out.println("In a thread!");
-        adapter = BluetoothAdapter.getDefaultAdapter();
-        if (adapter != null) {
-            System.out.println("Success!");
-        }
-        else {
-            System.out.println("Failure!");
-        }
-        if (adapter.isEnabled()) {
-            System.out.println("It's enabled!");
-        }
-
-        Set<BluetoothDevice> pairedDevices = adapter.getBondedDevices();
-        if (pairedDevices.size() > 0) {
-            // Loop through paired devices
-            for (BluetoothDevice device : pairedDevices) {
-                System.out.println(device.getName());
-            }
-        }
-    }
-
-}
+package rglover3.bluetoothtest;import java.io.IOException;import java.io.OutputStream;import java.util.UUID;import rglover3.bluetoothtest.R;import android.bluetooth.BluetoothAdapter;import android.bluetooth.BluetoothDevice;import android.app.Activity;import android.bluetooth.BluetoothSocket;import android.content.Intent;import android.os.Bundle;import android.os.Handler;import android.os.Message;import android.view.View;import android.widget.TextView;import android.widget.Toast;import android.app.AlertDialog;import android.content.DialogInterface;import android.content.DialogInterface.OnClickListener;import java.util.ArrayList;import java.util.Set;/** * Created by rglover3 on 7/1/2014. */public class BluetoothThread extends Thread {    private BluetoothAdapter adapter = null;    private BluetoothDevice clientDevice = null;    private BluetoothSocket btSocket = null;    private OutputStream outStream = null;    //MyActivity myActivity = null;    Handler myHandler = null;    private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");    ArrayList<BluetoothAdapter> adapterArray;    public BluetoothThread(Handler _handler) {        myHandler = _handler;    }    public void run() {        System.out.println("The Bluetooth Thread: " + Thread.currentThread().getName());        Message msg = Message.obtain();        Bundle bundle = new Bundle();        bundle.putString("Test", "test value");        msg.setData(bundle);        //msg.what = 999;        myHandler.sendMessage(msg);        System.out.println("In a thread!");        adapter = BluetoothAdapter.getDefaultAdapter();        if (adapter != null) {            System.out.println("Success!");        } else {            System.out.println("Failure!");        }        if (adapter.isEnabled()) {            System.out.println("It's enabled!");        }        Set<BluetoothDevice> pairedDevices = adapter.getBondedDevices();        if (pairedDevices.size() > 0) {            // Loop through paired devices            for (BluetoothDevice device : pairedDevices) {                System.out.println(device.getName());                if (device.getName().equals("IMAGING078")) {                    System.out.println("Setting the device up.");                    clientDevice = device;                }            }        }        startClient();        try {            Thread.sleep(11000);        } catch (Exception e) {            e.getMessage();        }        System.out.println("Sending string...");        sendString();    }    public void startClient() {        try {            btSocket = clientDevice.createRfcommSocketToServiceRecord(MY_UUID);            System.out.println("Created the socket worked.");        } catch (IOException e) {            System.out.println("From starting client: " + e.getMessage());        }        try {            btSocket.connect();            System.out.println("Connection established and data link opened...");        } catch (IOException e) {            System.out.println("Creating socket: " + e.getMessage());        }        sendToServer();    }    public void sendToServer() {        try {            outStream = btSocket.getOutputStream();        } catch (IOException e) {            System.out.println("Error with output stream: " + e.getMessage());        }    }    public void sendString() {        String message = "Hello from Android!";        byte[] msgBuffer = message.getBytes();        try {            outStream.write(msgBuffer);        } catch (IOException e) {            System.out.println("Writing error: " + e.getMessage());        }        System.out.println("Sent the message!");    }    /*public void AlertBox(String title, String message) {        new AlertDialog.Builder()                .setTitle(title)                .setMessage(message)                .setPositiveButton("Ok", new OnClickListener() {                    public void onClick(DialogInterface arg0, int arg1) {                    }                }).show();        }    }*/}

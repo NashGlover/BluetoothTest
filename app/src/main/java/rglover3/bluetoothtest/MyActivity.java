@@ -2,17 +2,38 @@ package rglover3.bluetoothtest;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 
 public class MyActivity extends Activity {
 
+    BluetoothThread blueThread = null;
+    public Handler _handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            System.out.println("Handling message thread : " + Thread.currentThread().getName());
+            Bundle bundle = msg.getData();
+            System.out.println(String.format("Handler.handleMessage(): msg=%s", bundle.getString("Test")));
+            // This is where main activity thread receives messages
+            // Put here your handling of incoming messages posted by other threads
+            super.handleMessage(msg);
+        }
+
+    };
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
-        (new Thread(new BluetoothThread())).start();
+        //(new Thread(new BluetoothThread())).start();
+        System.out.println("Current thread = " + Thread.currentThread().getName());
+        blueThread = new BluetoothThread(_handler);
+        blueThread.start();
+
     }
 
 
@@ -33,5 +54,9 @@ public class MyActivity extends Activity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void sendString(View view) {
+        blueThread.sendString();
     }
 }
